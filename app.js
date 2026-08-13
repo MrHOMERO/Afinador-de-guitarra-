@@ -5,16 +5,45 @@ let mediaStream = null;
 let isListening = false;
 let animationId = null;
 
-const guitarStrings = [
-  { note: "E2", freq: 80.54, markerClass: "marker-E2" },
-  { note: "A2", freq: 107.50, markerClass: "marker-A2" },
-  { note: "D3", freq: 143.49, markerClass: "marker-D3" },
-  { note: "G3", freq: 191.55, markerClass: "marker-G3" },
-  { note: "B3", freq: 240.20, markerClass: "marker-B3" },
-  { note: "E4", freq: 322.14, markerClass: "marker-E4" }
-];
+// Presets de Afinaciones basados en A4 = 430 Hz
+const TUNING_PRESETS = {
+  standard: [
+    { stringNum: 6, note: "E2", displayNote: "E", freq: 80.54, markerId: "m-6" },
+    { stringNum: 5, note: "A2", displayNote: "A", freq: 107.50, markerId: "m-5" },
+    { stringNum: 4, note: "D3", displayNote: "D", freq: 143.49, markerId: "m-4" },
+    { stringNum: 3, note: "G3", displayNote: "G", freq: 191.55, markerId: "m-3" },
+    { stringNum: 2, note: "B3", displayNote: "B", freq: 240.20, markerId: "m-2" },
+    { stringNum: 1, note: "E4", displayNote: "E", freq: 322.14, markerId: "m-1" }
+  ],
+  c_standard: [
+    { stringNum: 6, note: "C2", displayNote: "C", freq: 63.92, markerId: "m-6" },
+    { stringNum: 5, note: "F2", displayNote: "F", freq: 85.32, markerId: "m-5" },
+    { stringNum: 4, note: "A#2", displayNote: "A#", freq: 113.88, markerId: "m-4" },
+    { stringNum: 3, note: "D#3", displayNote: "D#", freq: 152.03, markerId: "m-3" },
+    { stringNum: 2, note: "G3", displayNote: "G", freq: 191.55, markerId: "m-2" },
+    { stringNum: 1, note: "C4", displayNote: "C", freq: 255.67, markerId: "m-1" }
+  ]
+};
 
-// Algoritmo para calcular la frecuencia (Pitch Detection)
+let currentTuning = TUNING_PRESETS.standard;
+
+// Cambiar afinación según la selección
+const tuningSelect = document.getElementById('tuning-select');
+tuningSelect.addEventListener('change', (e) => {
+  const selected = e.target.value;
+  currentTuning = TUNING_PRESETS[selected];
+  updateMarkerLabels();
+  resetVisuals();
+});
+
+function updateMarkerLabels() {
+  currentTuning.forEach(s => {
+    const el = document.getElementById(s.markerId);
+    if (el) el.innerText = s.displayNote;
+  });
+}
+
+// Algoritmo Autocorrelación
 function autoCorrelate(buf, sampleRate) {
   let SIZE = buf.length;
   let rms = 0;
@@ -51,7 +80,7 @@ function autoCorrelate(buf, sampleRate) {
   return sampleRate / maxpos;
 }
 
-// Botón Toggle: Iniciar / Apagar Micrófono
+// Control del Micrófono (Toggle)
 const startBtn = document.getElementById('start-btn');
 
 startBtn.addEventListener('click', async () => {
@@ -119,7 +148,8 @@ function evaluateTuning(pitch) {
   let closestString = null;
   let minDiff = Infinity;
 
-  guitarStrings.forEach(string => {
+  // Evaluar contra la afinación seleccionada actualmente
+  currentTuning.forEach(string => {
     const diff = Math.abs(pitch - string.freq);
     if (diff < minDiff) {
       minDiff = diff;
@@ -138,20 +168,21 @@ function evaluateTuning(pitch) {
   arrowRight.classList.remove('active');
 
   if (closestString && minDiff < 25) {
-    const activeMarker = document.querySelector(`.${closestString.markerClass}`);
-    activeMarker.classList.add('active');
-    document.getElementById('detected-note').innerText = closestString.note.replace(/\d/, '');
+    const activeMarker = document.getElementById(closestString.markerId);
+    if (activeMarker) activeMarker.classList.add('active');
+    
+    document.getElementById('detected-note').innerText = closestString.displayNote;
 
     const diff = pitch - closestString.freq;
 
-    // Posición horizontal del indicador (0% a 100%)
+    // Posición horizontal del indicador
     let posPercent = 50 + (diff * 4);
     posPercent = Math.max(5, Math.min(95, posPercent));
     indicator.style.left = `${posPercent}%`;
 
     // Evaluación del tono
-    if (Math.abs(diff) <= 0.8) { // ¡AFINADO!
-      activeMarker.classList.add('in-tune');
+    if (Math.abs(diff) <= 0.8) { // AFINADO
+      if (activeMarker) activeMarker.classList.add('in-tune');
       indicator.style.backgroundColor = '#2ecc71';
       instruction.innerText = "¡Afinado!";
       instruction.style.color = '#2ecc71';
@@ -191,3 +222,6 @@ function resetVisuals(resetFreq = true) {
     document.getElementById('detected-freq').innerText = "0.0 Hz";
   }
 }
+
+// Inicializar etiquetas
+updateMarkerLabels();
