@@ -11,53 +11,72 @@
   <header>
     <div>
       <h1>Afinador<span>Pro</span></h1>
-      <div class="subtitle">Guitarra 6 cuerdas > A4=430Hz</div>
+      <div class="subtitle">Guitarra 6 Cuerdas (A4 = 430Hz)</div>
     </div>
     <button id="start-btn">Iniciar</button>
   </header>
 
   <main>
-    <!-- Visualizador de nota grande -->
+    <!-- Visualizador de nota y frecuencia -->
     <div id="tuner-display">
       <div id="detected-note">--</div>
       <div id="detected-freq">0.0 Hz</div>
+      <div id="action-instruction">Toca una cuerda...</div>
     </div>
 
-    <!-- Contenedor Visual Central -->
+    <!-- Indicador con Flechas (Tensar / Aflojar) -->
+    <div class="tuning-guide">
+      <div id="arrow-left" class="arrow">▲<br><span>Tensar</span></div>
+      <div class="tuning-line-container">
+        <div class="tuning-line"></div>
+        <div id="tuning-indicator"></div>
+      </div>
+      <div id="arrow-right" class="arrow">▼<br><span>Aflojar</span></div>
+    </div>
+
+    <!-- Contenedor del Clavijero y Marcadores -->
     <div class="guitar-visual-container">
       
-      <!-- Línea y símbolos de afinación -->
-      <div class="tuning-line"></div>
-      <div id="tuning-indicator"></div>
-      <div class="flat-symbol">b</div>
-      <div class="sharp-symbol">#</div>
-
-      <!-- El Clavijero -->
-      <div class="headstock">
-        <div class="nut"></div>
-      </div>
-
-      <!-- Marcadores de Nota Flotantes (E, A, D, G, B, E) -->
-      <div class="note-markers-container">
-        <!-- Lado Izquierdo (Graves) -->
-        <div class="note-marker marker-E2" data-note="E2" data-freq="80.54">E</div>
-        <div class="note-marker marker-A2" data-note="A2" data-freq="107.50">A</div>
-        <div class="note-marker marker-D3" data-note="D3" data-freq="143.49">D</div>
+      <!-- Clavijero Ilustrado en Vector (SVG) -->
+      <svg class="headstock-svg" viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
+        <!-- Cuerpo de Madera de la Pala -->
+        <path d="M 40 280 L 40 180 Q 20 120 30 50 Q 50 20 100 15 Q 150 20 170 50 Q 180 120 160 280 Z" fill="#4a2c11" stroke="#2d1a0a" stroke-width="3"/>
+        <path d="M 45 275 L 45 180 Q 28 123 37 55 Q 55 28 100 23 Q 145 28 163 55 Q 172 123 155 275 Z" fill="#6a3b18"/>
         
-        <!-- Lado Derecho (Agudos) -->
-        <div class="note-marker marker-G3" data-note="G3" data-freq="191.55">G</div>
-        <div class="note-marker marker-B3" data-note="B3" data-freq="240.20">B</div>
-        <div class="note-marker marker-E4" data-note="E4" data-freq="322.14">E</div>
+        <!-- Cejilla (Nut) y Diapasón -->
+        <rect x="40" y="270" width="120" height="12" fill="#e8dcc4" rx="2"/>
+        <rect x="45" y="282" width="110" height="18" fill="#22150c"/>
+
+        <!-- Clavijas Metálicas (Izquierda) -->
+        <circle cx="25" cy="80" r="8" fill="#d0d0d0" stroke="#888" stroke-width="2"/>
+        <circle cx="20" cy="140" r="8" fill="#d0d0d0" stroke="#888" stroke-width="2"/>
+        <circle cx="22" cy="200" r="8" fill="#d0d0d0" stroke="#888" stroke-width="2"/>
+        
+        <!-- Clavijas Metálicas (Derecha) -->
+        <circle cx="175" cy="80" r="8" fill="#d0d0d0" stroke="#888" stroke-width="2"/>
+        <circle cx="180" cy="140" r="8" fill="#d0d0d0" stroke="#888" stroke-width="2"/>
+        <circle cx="178" cy="200" r="8" fill="#d0d0d0" stroke="#888" stroke-width="2"/>
+
+        <!-- Cuerdas -->
+        <line x1="50" y1="282" x2="35" y2="200" stroke="#aaa" stroke-width="2.5"/>
+        <line x1="68" y1="282" x2="32" y2="140" stroke="#aaa" stroke-width="2"/>
+        <line x1="86" y1="282" x2="38" y2="80" stroke="#aaa" stroke-width="1.8"/>
+        <line x1="114" y1="282" x2="162" y2="80" stroke="#aaa" stroke-width="1.5"/>
+        <line x1="132" y1="282" x2="168" y2="140" stroke="#aaa" stroke-width="1.2"/>
+        <line x1="150" y1="282" x2="165" y2="200" stroke="#aaa" stroke-width="1"/>
+      </svg>
+
+      <!-- Marcadores de Nota Flotantes -->
+      <div class="note-markers-container">
+        <div class="note-marker marker-E2" data-note="E2">E</div>
+        <div class="note-marker marker-A2" data-note="A2">A</div>
+        <div class="note-marker marker-D3" data-note="D3">D</div>
+        
+        <div class="note-marker marker-G3" data-note="G3">G</div>
+        <div class="note-marker marker-B3" data-note="B3">B</div>
+        <div class="note-marker marker-E4" data-note="E4">E</div>
       </div>
 
-    </div>
-
-    <!-- Barra de navegación inferior (Solo visual) -->
-    <div class="bottom-nav">
-      <div class="nav-item">Canciones</div>
-      <div class="nav-item">Herramientas</div>
-      <div class="nav-item active">Afinar</div>
-      <div class="nav-item">Lecciones</div>
     </div>
   </main>
 
