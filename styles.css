@@ -1,32 +1,17 @@
-/* --- Estilos Globales y Fondo --- */
 body {
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background-color: #121418; /* Fondo muy oscuro, casi negro */
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  background-color: #121418;
   color: #eee;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   height: 100vh;
-  overflow: hidden; /* Evita el desplazamiento */
+  overflow: hidden;
 }
 
-/* Fondo de cuadrícula sutil, como en la imagen */
-body::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background-image: 
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 20px 20px;
-  z-index: -1;
-}
-
-/* --- Encabezado --- */
 header {
-  padding: 20px;
-  text-align: left;
+  padding: 15px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -35,204 +20,142 @@ header {
 
 header h1 {
   margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #fff;
+  font-size: 22px;
 }
 
-header h1 span {
-  color: #2ecc71; /* Color verde para "tuna" */
-}
-
-.subtitle {
-  font-size: 14px;
-  color: #aaa;
-  margin-top: 4px;
-}
+header h1 span { color: #2ecc71; }
+.subtitle { font-size: 12px; color: #888; }
 
 #start-btn {
   background-color: #2ecc71;
   border: none;
-  padding: 10px 20px;
+  padding: 10px 18px;
   color: #fff;
   font-weight: bold;
   border-radius: 20px;
   cursor: pointer;
-  font-size: 14px;
+  transition: background 0.3s;
 }
 
-/* --- Área Principal del Afinador --- */
+#start-btn.active {
+  background-color: #e74c3c; /* Rojo para detener */
+}
+
 main {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: relative;
-  padding-top: 20px;
+  padding-top: 10px;
 }
 
-/* --- Visualización de la Nota Detectada --- */
-#tuner-display {
-  text-align: center;
-  margin-bottom: 30px;
-  z-index: 10;
-}
+#tuner-display { text-align: center; margin-bottom: 10px; }
+#detected-note { font-size: 56px; font-weight: bold; color: #fff; line-height: 1; }
+#detected-freq { font-size: 16px; color: #888; margin-top: 4px; }
 
-#detected-note {
-  font-size: 64px;
-  font-weight: 800;
-  color: #fff;
-  line-height: 1;
-}
-
-#detected-freq {
+#action-instruction {
   font-size: 16px;
-  color: #888;
-  margin-top: 5px;
+  font-weight: 600;
+  margin-top: 6px;
+  color: #aaa;
 }
 
-/* --- El Clavijero y los Marcadores --- */
-.guitar-visual-container {
-  position: relative;
-  width: 300px; /* Ancho total del área visual */
-  height: 400px;
+/* Guias de Afinacion (Flechas + Barra) */
+.tuning-guide {
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 15px;
+  width: 280px;
+  margin-bottom: 15px;
 }
 
-/* Línea central de afinación */
+.arrow {
+  font-size: 14px;
+  color: #444;
+  text-align: center;
+  font-weight: bold;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.arrow span { font-size: 10px; display: block; }
+.arrow.active { color: #f39c12; transform: scale(1.2); }
+
+.tuning-line-container {
+  position: relative;
+  width: 140px;
+  height: 10px;
+  background: #222;
+  border-radius: 5px;
+}
+
 .tuning-line {
   position: absolute;
-  top: 0;
   left: 50%;
-  transform: translateX(-50%);
   width: 2px;
   height: 100%;
-  background-color: #333; /* Línea base oscura */
-  z-index: 1;
+  background-color: #555;
 }
 
-/* Indicador de afinación (el triángulo/puntero) */
 #tuning-indicator {
   position: absolute;
-  top: 0; /* Empieza arriba */
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  width: 12px;
-  height: 12px;
-  background-color: #2ecc71; /* Verde cuando está afinado */
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background-color: #777;
   border-radius: 50%;
-  z-index: 2;
-  transition: top 0.1s ease-out, background-color 0.2s;
-  box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
-  display: none; /* Oculto hasta que se detecte tono */
+  transition: left 0.1s ease-out, background-color 0.2s;
 }
 
-/* Símbolos b y # */
-.flat-symbol, .sharp-symbol {
-  position: absolute;
-  top: 10px;
-  font-size: 20px;
-  color: #555;
-  z-index: 2;
-}
-.flat-symbol { left: 20px; }
-.sharp-symbol { right: 20px; }
-
-/* El clavijero de madera (más realista) */
-.headstock {
-  position: absolute;
-  bottom: 0;
-  width: 160px;
-  height: 260px;
-  background: linear-gradient(135deg, #6f4e37 0%, #4d3321 100%);
-  border-radius: 20px 20px 5px 5px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,0,0,0.3);
-  z-index: 3;
-  overflow: hidden;
+/* Clavijero Visual (SVG) */
+.guitar-visual-container {
+  position: relative;
+  width: 260px;
+  height: 320px;
 }
 
-/* Cejilla (Nut) */
-.nut {
-  position: absolute;
-  bottom: 0;
+.headstock-svg {
   width: 100%;
-  height: 12px;
-  background-color: #d1c4a9; /* Color hueso */
-  border-top: 2px solid #a3967f;
+  height: 100%;
 }
 
-/* Marcadores de Nota (los círculos E, A, D...) */
 .note-markers-container {
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
-  z-index: 4;
 }
 
 .note-marker {
   position: absolute;
-  width: 45px;
-  height: 45px;
-  background-color: #1a1d22; /* Fondo oscuro del círculo */
+  width: 42px;
+  height: 42px;
+  background-color: #1a1d22;
   border: 2px solid #333;
   border-radius: 50%;
-  color: #888;
+  color: #777;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 18px;
+  font-weight: bold;
+  font-size: 16px;
   transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
-/* Posicionamiento de cada marcador alrededor del clavijero */
-/* Lado Izquierdo */
-.marker-E2 { left: 10px; bottom: 80px; }
-.marker-A2 { left: 10px; bottom: 150px; }
-.marker-D3 { left: 10px; bottom: 220px; }
+/* Ubicación exacta sobre las clavijas del SVG */
+.marker-E2 { left: -5px; bottom: 85px; }
+.marker-A2 { left: -10px; bottom: 155px; }
+.marker-D3 { left: -5px; bottom: 225px; }
 
-/* Lado Derecho */
-.marker-G3 { right: 10px; bottom: 220px; }
-.marker-B3 { right: 10px; bottom: 150px; }
-.marker-E4 { right: 10px; bottom: 80px; }
+.marker-G3 { right: -5px; bottom: 225px; }
+.marker-B3 { right: -10px; bottom: 155px; }
+.marker-E4 { right: -5px; bottom: 85px; }
 
-/* Estados de los marcadores */
-.note-marker.active {
-  color: #fff;
-  border-color: #fff;
-  background-color: #2a2d34;
-}
-
+/* Estados */
+.note-marker.active { color: #fff; border-color: #fff; background-color: #333; }
 .note-marker.in-tune {
   background-color: #2ecc71;
   border-color: #2ecc71;
   color: #fff;
-  box-shadow: 0 0 15px rgba(46, 204, 113, 0.6);
-}
-
-/* Barra de navegación inferior (solo visual, como en la imagen) */
-.bottom-nav {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 60px;
-  background-color: #1a1d22;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  border-top: 1px solid #2a2d34;
-  z-index: 10;
-}
-
-.nav-item {
-  color: #666;
-  font-size: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.nav-item.active {
-  color: #2ecc71;
+  box-shadow: 0 0 12px #2ecc71;
 }
