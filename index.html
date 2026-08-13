@@ -11,8 +11,17 @@
   <header>
     <div>
       <h1>Afinador<span>Pro</span></h1>
-      <div class="subtitle">Guitarra 6 Cuerdas (A4 = 430Hz)</div>
+      <div class="subtitle">A4 = 430Hz</div>
     </div>
+    
+    <!-- Selector de Afinación -->
+    <div class="tuning-selector-container">
+      <select id="tuning-select">
+        <option value="standard">Estándar (E A D G B E)</option>
+        <option value="c_standard">Do / C Standard (C F A# D# G C)</option>
+      </select>
+    </div>
+
     <button id="start-btn">Iniciar</button>
   </header>
 
@@ -66,15 +75,15 @@
         <line x1="150" y1="282" x2="165" y2="200" stroke="#aaa" stroke-width="1"/>
       </svg>
 
-      <!-- Marcadores de Nota Flotantes -->
+      <!-- Marcadores de Nota Flotantes (Se actualizan por JS) -->
       <div class="note-markers-container">
-        <div class="note-marker marker-E2" data-note="E2">E</div>
-        <div class="note-marker marker-A2" data-note="A2">A</div>
-        <div class="note-marker marker-D3" data-note="D3">D</div>
+        <div id="m-6" class="note-marker marker-E2">E</div>
+        <div id="m-5" class="note-marker marker-A2">A</div>
+        <div id="m-4" class="note-marker marker-D3">D</div>
         
-        <div class="note-marker marker-G3" data-note="G3">G</div>
-        <div class="note-marker marker-B3" data-note="B3">B</div>
-        <div class="note-marker marker-E4" data-note="E4">E</div>
+        <div id="m-3" class="note-marker marker-G3">G</div>
+        <div id="m-2" class="note-marker marker-B3">B</div>
+        <div id="m-1" class="note-marker marker-E4">E</div>
       </div>
 
     </div>
