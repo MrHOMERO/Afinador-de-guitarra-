@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Afinador de Guitarra (430 Hz)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header>
+    <h1>Afinador de Guitarra</h1>
+    <p>Afinación Estándar A4 = <strong>430 Hz</strong></p>
+    <button id="start-btn">Iniciar Micrófono</button>
+  </header>
+
+  <main>
+    <!-- Visualizador de frecuencia actual -->
+    <div id="tuner-display">
+      <div id="detected-note">--</div>
+      <div id="detected-freq">0.0 Hz</div>
+      <div id="tuning-status">Haz clic en Iniciar</div>
+    </div>
+
+    <!-- Mástil y Clavijero de la Guitarra -->
+    <div class="headstock-container">
+      <div class="headstock">
+        <!-- Clavijas del lado izquierdo (Cuerdas 6, 5, 4) -->
+        <div class="peg-column left">
+          <button class="peg" data-string="6" data-note="E2" data-freq="80.54">
+            <span class="note-name">E2</span>
+            <span class="freq-target">80.5 Hz</span>
+          </button>
+          <button class="peg" data-string="5" data-note="A2" data-freq="107.50">
+            <span class="note-name">A2</span>
+            <span class="freq-target">107.5 Hz</span>
+          </button>
+          <button class="peg" data-string="4" data-note="D3" data-freq="143.49">
+            <span class="note-name">D3</span>
+            <span class="freq-target">143.5 Hz</span>
+          </button>
+        </div>
+
+        <!-- Mástil / Cejilla Central -->
+        <div class="nut"></div>
+
+        <!-- Clavijas del lado derecho (Cuerdas 3, 2, 1) -->
+        <div class="peg-column right">
+          <button class="peg" data-string="3" data-note="G3" data-freq="191.55">
+            <span class="note-name">G3</span>
+            <span class="freq-target">191.5 Hz</span>
+          </button>
+          <button class="peg" data-string="2" data-note="B3" data-freq="240.20">
+            <span class="note-name">B3</span>
+            <span class="freq-target">240.2 Hz</span>
+          </button>
+          <button class="peg" data-string="1" data-note="E4" data-freq="322.14">
+            <span class="note-name">E4</span>
+            <span class="freq-target">322.1 Hz</span>
+          </button>
+        </div>
+      </div>
+      <div class="neck"></div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
