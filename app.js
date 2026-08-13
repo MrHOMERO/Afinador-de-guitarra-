@@ -1,10 +1,10 @@
-// --- Configuración e Inicialización ---
-let audioCtx;
-let analyser;
-let microphone;
-const A4_FREQ = 430; // Tu referencia personalizada
+let audioCtx = null;
+let analyser = null;
+let microphone = null;
+let mediaStream = null;
+let isListening = false;
+let animationId = null;
 
-// Definición de las cuerdas y sus frecuencias objetivo (A4=430Hz)
 const guitarStrings = [
   { note: "E2", freq: 80.54, markerClass: "marker-E2" },
   { note: "A2", freq: 107.50, markerClass: "marker-A2" },
@@ -14,17 +14,13 @@ const guitarStrings = [
   { note: "E4", freq: 322.14, markerClass: "marker-E4" }
 ];
 
-// --- Algoritmo de Autocorrelación (DSP) ---
-// (Este algoritmo permanece igual, es el motor de detección)
+// Algoritmo para calcular la frecuencia (Pitch Detection)
 function autoCorrelate(buf, sampleRate) {
   let SIZE = buf.length;
   let rms = 0;
-  for (let i = 0; i < SIZE; i++) {
-    let val = buf[i];
-    rms += val * val;
-  }
+  for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
   rms = Math.sqrt(rms / SIZE);
-  if (rms < 0.01) return -1; // Silencio
+  if (rms < 0.01) return -1;
 
   let r1 = 0, r2 = SIZE - 1, thres = 0.2;
   for (let i = 0; i < SIZE / 2; i++) {
@@ -35,12 +31,14 @@ function autoCorrelate(buf, sampleRate) {
   }
   buf = buf.slice(r1, r2);
   SIZE = buf.length;
+
   let c = new Array(SIZE).fill(0);
   for (let i = 0; i < SIZE; i++) {
     for (let j = 0; j < SIZE - i; j++) {
       c[i] = c[i] + buf[j] * buf[j + i];
     }
   }
+
   let d = 0;
   while (c[d] > c[d + 1]) d++;
   let maxval = -1, maxpos = -1;
@@ -50,57 +48,77 @@ function autoCorrelate(buf, sampleRate) {
       maxpos = i;
     }
   }
-  let T0 = maxpos;
-  return sampleRate / T0;
+  return sampleRate / maxpos;
 }
 
-// --- Lógica de la Interfaz de Usuario ---
+// Botón Toggle: Iniciar / Apagar Micrófono
 const startBtn = document.getElementById('start-btn');
-const freqDisplay = document.getElementById('detected-freq');
-const noteDisplay = document.getElementById('detected-note');
-const tuningIndicator = document.getElementById('tuning-indicator');
-const noteMarkers = document.querySelectorAll('.note-marker');
 
 startBtn.addEventListener('click', async () => {
+  if (!isListening) {
+    await startListening();
+  } else {
+    stopListening();
+  }
+});
+
+async function startListening() {
   try {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    microphone = audioCtx.createMediaStreamSource(stream);
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    microphone = audioCtx.createMediaStreamSource(mediaStream);
     analyser = audioCtx.createAnalyser();
     analyser.fftSize = 2048;
     microphone.connect(analyser);
 
-    startBtn.innerText = "Escuchando...";
-    startBtn.disabled = true;
-    tuningIndicator.style.display = 'block'; // Mostrar indicador
+    isListening = true;
+    startBtn.innerText = "Detener";
+    startBtn.classList.add('active');
 
     updatePitch();
   } catch (err) {
-    alert("No se pudo acceder al micrófono. Asegúrate de dar permisos.");
+    alert("Error al acceder al micrófono: " + err.message);
   }
-});
+}
+
+function stopListening() {
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(track => track.stop());
+  }
+  if (audioCtx) {
+    audioCtx.close();
+  }
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+  }
+
+  isListening = false;
+  startBtn.innerText = "Iniciar";
+  startBtn.classList.remove('active');
+  resetVisuals();
+}
 
 function updatePitch() {
+  if (!isListening) return;
+
   const buf = new Float32Array(2048);
   analyser.getFloatTimeDomainData(buf);
   const pitch = autoCorrelate(buf, audioCtx.sampleRate);
 
   if (pitch !== -1) {
-    freqDisplay.innerText = pitch.toFixed(1) + " Hz";
+    document.getElementById('detected-freq').innerText = pitch.toFixed(1) + " Hz";
     evaluateTuning(pitch);
   } else {
-    // Si no hay sonido, resetear visualmente
-    resetVisuals();
+    resetVisuals(false);
   }
 
-  requestAnimationFrame(updatePitch);
+  animationId = requestAnimationFrame(updatePitch);
 }
 
 function evaluateTuning(pitch) {
   let closestString = null;
   let minDiff = Infinity;
 
-  // 1. Encontrar la cuerda más cercana
   guitarStrings.forEach(string => {
     const diff = Math.abs(pitch - string.freq);
     if (diff < minDiff) {
@@ -109,55 +127,67 @@ function evaluateTuning(pitch) {
     }
   });
 
-  // 2. Actualizar marcadores de nota (los círculos)
-  noteMarkers.forEach(marker => marker.classList.remove('active', 'in-tune'));
+  const noteMarkers = document.querySelectorAll('.note-marker');
+  const arrowLeft = document.getElementById('arrow-left');
+  const arrowRight = document.getElementById('arrow-right');
+  const instruction = document.getElementById('action-instruction');
+  const indicator = document.getElementById('tuning-indicator');
 
-  if (closestString && minDiff < 25) { // Tolerancia para identificar cuerda
+  noteMarkers.forEach(m => m.classList.remove('active', 'in-tune'));
+  arrowLeft.classList.remove('active');
+  arrowRight.classList.remove('active');
+
+  if (closestString && minDiff < 25) {
     const activeMarker = document.querySelector(`.${closestString.markerClass}`);
     activeMarker.classList.add('active');
-    noteDisplay.innerText = closestString.note.replace(/\d/, ''); // Mostrar solo 'E', 'A', etc.
+    document.getElementById('detected-note').innerText = closestString.note.replace(/\d/, '');
 
-    // 3. Mover el indicador de afinación (la bola verde)
-    const targetFreq = closestString.freq;
-    const freqDiff = pitch - targetFreq;
+    const diff = pitch - closestString.freq;
 
-    // Calcular la posición vertical (top) del indicador
-    // Mapeamos la diferencia de frecuencia a un rango de píxeles (0px a 100px)
-    // 0px = Muy plano (b), 50px = Afinación perfecta, 100px = Muy afilado (#)
-    let indicatorPosPercent = 50 + (freqDiff * 3); // Ajusta el multiplicador (3) para sensibilidad
-    
-    // Limitar el rango entre 5% y 95% para que no se salga
-    indicatorPosPercent = Math.max(5, Math.min(95, indicatorPosPercent));
-    
-    tuningIndicator.style.top = `${indicatorPosPercent}%`;
+    // Posición horizontal del indicador (0% a 100%)
+    let posPercent = 50 + (diff * 4);
+    posPercent = Math.max(5, Math.min(95, posPercent));
+    indicator.style.left = `${posPercent}%`;
 
-    // 4. Estado de "Afinado"
-    if (Math.abs(freqDiff) <= 0.7) { // Tolerancia de afinación
+    // Evaluación del tono
+    if (Math.abs(diff) <= 0.8) { // ¡AFINADO!
       activeMarker.classList.add('in-tune');
-      tuningIndicator.style.backgroundColor = '#2ecc71'; // Verde brillante
-      tuningIndicator.style.boxShadow = '0 0 15px rgba(46, 204, 113, 0.8)';
-    } else {
-      // No afinado: Color normal, pero posicionado
-      tuningIndicator.style.backgroundColor = '#2ecc71'; 
-      tuningIndicator.style.boxShadow = '0 0 10px rgba(46, 204, 113, 0.5)';
+      indicator.style.backgroundColor = '#2ecc71';
+      instruction.innerText = "¡Afinado!";
+      instruction.style.color = '#2ecc71';
+    } else if (diff < 0) { // BAJO -> Tensar
+      arrowLeft.classList.add('active');
+      indicator.style.backgroundColor = '#f39c12';
+      instruction.innerText = "Tensar cuerda";
+      instruction.style.color = '#f39c12';
+    } else { // ALTO -> Aflojar
+      arrowRight.classList.add('active');
+      indicator.style.backgroundColor = '#f39c12';
+      instruction.innerText = "Aflojar cuerda";
+      instruction.style.color = '#f39c12';
     }
-
   } else {
-    // Sonido detectado pero no cerca de ninguna cuerda
-    noteDisplay.innerText = "--";
-    resetIndicator();
+    document.getElementById('detected-note').innerText = "--";
+    instruction.innerText = "Toca una cuerda...";
+    instruction.style.color = "#aaa";
+    indicator.style.left = '50%';
+    indicator.style.backgroundColor = '#777';
   }
 }
 
-function resetVisuals() {
-  noteMarkers.forEach(marker => marker.classList.remove('active', 'in-tune'));
-  noteDisplay.innerText = "--";
-  freqDisplay.innerText = "Toca una cuerda...";
-  resetIndicator();
-}
+function resetVisuals(resetFreq = true) {
+  document.querySelectorAll('.note-marker').forEach(m => m.classList.remove('active', 'in-tune'));
+  document.getElementById('arrow-left').classList.remove('active');
+  document.getElementById('arrow-right').classList.remove('active');
+  document.getElementById('detected-note').innerText = "--";
+  document.getElementById('action-instruction').innerText = "Toca una cuerda...";
+  document.getElementById('action-instruction').style.color = "#aaa";
+  
+  const indicator = document.getElementById('tuning-indicator');
+  indicator.style.left = '50%';
+  indicator.style.backgroundColor = '#777';
 
-function resetIndicator() {
-  tuningIndicator.style.top = '50%'; // Volver al centro
-  tuningIndicator.style.backgroundColor = '#555'; // Color neutro
-  tuningIndicator.style.boxShadow = 'none';
+  if (resetFreq) {
+    document.getElementById('detected-freq').innerText = "0.0 Hz";
+  }
 }
